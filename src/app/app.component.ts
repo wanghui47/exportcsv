@@ -1,16 +1,21 @@
 import { Component } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ExportService } from './services/export.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  providers: [DatePipe]
 })
 export class AppComponent {
   title = 'app';
-  public csvLink: SafeResourceUrl;
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(
+    private exportService: ExportService,
+    private datePipe: DatePipe
+  ) {}
 
   public export() {
     const people = [
@@ -39,42 +44,17 @@ export class AppComponent {
         hobby: 'reading'
       }
     ];
-    // s1. 用一个数组来存一行数据,所以第一行用一个数组来保存字段名
-    const head = [['name', 'age', 'sex', 'birthday', 'phone', 'hobby']];
-
-    // s2. 将数据push到大数组中
-    const p = people;
-    for (let i = 0; i < p.length; i++) {
-      head.push([
-        p[i].name,
-        p[i].age,
-        p[i].sex,
-        p[i].birthday,
-        p[i].phone,
-        p[i].hobby
-      ]);
-    }
-
-    // s3. 按照csv文件内容格式，把每个数组用 , 连接，形成一行，并存入新数组
-    const csvRows = [];
-    for (let j = 0; j < head.length; j++) {
-      csvRows.push(head[j].join(','));
-    }
-
-    // s4. 把新数组用 \n 回车连接，形成csvString
-
-    let csvString = csvRows.join('\n');
-
-    // BOM的方式解决EXCEL乱码问题
-    const BOM = '\uFEFF';
-    csvString = BOM + csvString;
-
-    this.csvLink = this.sanitizer.bypassSecurityTrustResourceUrl(
-      'data:attachment/csv,' + encodeURI(csvString)
+    const csvDownloadUrl = this.exportService.exportToCsvAsDataUrl(
+      people,
+      ['name', 'age', 'sex', 'birthday', 'phone', 'hobby'],
+      ['name', 'age', 'sex', 'birthday', 'phone', 'hobby']
     );
 
-    console.log(this.csvLink);
-    document.getElementById('downloadCsv').click();
+    document.getElementById('downloadCsv')['href'] = csvDownloadUrl;
+    document.getElementById('downloadCsv')['download'] = `Test_${new DatePipe(
+      'en-US'
+    ).transform(new Date(), 'yyyyMMddHHmmss')}.csv`;
     console.log(document.getElementById('downloadCsv'));
+    document.getElementById('downloadCsv').click();
   }
 }

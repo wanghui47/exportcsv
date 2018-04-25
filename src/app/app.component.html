@@ -8,5 +8,6 @@
     <button (click)="export()">
         Download csv
     </button>
-    <a [href]="csvLink" id="downloadCsv" target="_blank" download="test.csv"></a>
+    <!-- We use a tag to implement the download, so we hide it.  -->
+    <a id="downloadCsv" target="_blank" hidden></a>
 </ul>
